@@ -1,12 +1,12 @@
 {
   "files": {
-    "main.js": "/static/js/main.64e24bd3.js",
-    "static/js/952.752e13e3.chunk.js": "/static/js/952.752e13e3.chunk.js",
-    "index.html": "/index.html",
-    "main.64e24bd3.js.map": "/static/js/main.64e24bd3.js.map",
-    "952.752e13e3.chunk.js.map": "/static/js/952.752e13e3.chunk.js.map"
+    "main.js": "/my-app-edel/static/js/main.434e623f.js",
+    "static/js/952.752e13e3.chunk.js": "/my-app-edel/static/js/952.752e13e3.chunk.js",
+    "index.html": "/my-app-edel/index.html",
+    "main.434e623f.js.map": "/my-app-edel/static/js/main.434e623f.js.map",
+    "952.752e13e3.chunk.js.map": "/my-app-edel/static/js/952.752e13e3.chunk.js.map"
   },
   "entrypoints": [
-    "static/js/main.64e24bd3.js"
+    "static/js/main.434e623f.js"
   ]
 }
