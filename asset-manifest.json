@@ -1,12 +1,12 @@
 {
   "files": {
-    "main.js": "/my-app-edel/static/js/main.434e623f.js",
+    "main.js": "/my-app-edel/static/js/main.c6233811.js",
     "static/js/952.752e13e3.chunk.js": "/my-app-edel/static/js/952.752e13e3.chunk.js",
     "index.html": "/my-app-edel/index.html",
-    "main.434e623f.js.map": "/my-app-edel/static/js/main.434e623f.js.map",
+    "main.c6233811.js.map": "/my-app-edel/static/js/main.c6233811.js.map",
     "952.752e13e3.chunk.js.map": "/my-app-edel/static/js/952.752e13e3.chunk.js.map"
   },
   "entrypoints": [
-    "static/js/main.434e623f.js"
+    "static/js/main.c6233811.js"
   ]
 }
