@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 
 // Estilos CSS básicos para mejorar la apariencia del formulario
+// Estilos CSS mejorados
 const styles = {
     formContainer: {
         maxWidth: '600px',
@@ -35,40 +35,110 @@ const styles = {
         borderRadius: '4px',
         cursor: 'pointer',
         fontSize: '16px',
-    }
+    },
+    table: {
+        width: '80%',
+        margin: '20px auto',
+        borderCollapse: 'collapse',
+        boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
+    },
+    th: {
+        borderBottom: '2px solid #ddd',
+        padding: '10px',
+        backgroundColor: '#f1f1f1',
+        textAlign: 'left',
+    },
+    td: {
+        padding: '10px',
+        borderBottom: '1px solid #ddd',
+    },
+    trHover: {
+        backgroundColor: '#f9f9f9',
+    },
+    editButton: {
+        marginRight: '10px',
+        padding: '5px 10px',
+        backgroundColor: '#28a745',
+        color: '#fff',
+        border: 'none',
+        borderRadius: '4px',
+        cursor: 'pointer',
+    },
+    deleteButton: {
+        padding: '5px 10px',
+        backgroundColor: '#dc3545',
+        color: '#fff',
+        border: 'none',
+        borderRadius: '4px',
+        cursor: 'pointer',
+    },
 };
 
-function InspectionForm() {
-    const [num, setNum] = useState('');
-    const [numFicha, setNumFicha] = useState('');
-    const [nombreInspector, setNombreInspector] = useState('Edel Candia Mamani');
-    const [nombreResponsable, setNombreResponsable] = useState('Luis Zavala Gutiérrez');
-    const [fecha, setFecha] = useState('');
-    const [horaInicio, setHoraInicio] = useState('');
-    const [horaFinalizacion, setHoraFinalizacion] = useState('');
-    const [areaProduccion, setAreaProduccion] = useState('TACNA 02/02-A-TAC');
-    const [numeroDER, setNumeroDER] = useState('');
-    const [localizacion, setLocalizacion] = useState('CALETA - PUNTA PICATA');
-    const [numeroDniRuc, setNumeroDniRuc] = useState('');
-    const [nombreAsociacion, setNombreAsociacion] = useState('');
-    const [numeroRegistro, setNumeroRegistro] = useState('');
-    const [nombreRepresentante, setNombreRepresentante] = useState('');
-    const [dniRepresentante, setDniRepresentante] = useState('');
-    const [nombreAplicacion, setNombreAplicacion] = useState('TRAZAMOBI');
-    const [plataformaDigital, setPlataformaDigital] = useState('WhatsApp Web');
-    const [numeroMatricula, setNumeroMatricula] = useState('');
-    const [nombreEmbarcacion, setNombreEmbarcacion] = useState('');
-    const [cantidad, setCantidad] = useState('');
-    const [tipoRecurso, setTipoRecurso] = useState('');
-    const [destinoFinal, setDestinoFinal] = useState('');
-    const [descripcionMedioProbatorio, setDescripcionMedioProbatorio] = useState('Imagen fotográfica');
-    const [numeroPlaca, setNumeroPlaca] = useState('');
-    const [loadingDniRepresentante, setLoadingDniRepresentante] = useState(false); // Estado añadido para la carga del DNI del Representante
-    const [loadingDniRuc, setLoadingDniRuc] = useState(false); // Estado añadido para la carga del DNI o RUC
+
+// Estado inicial del formulario
+const initialState = {
+    num: '',
+    numFicha: '',
+    nombreInspector: 'Edel Candia Mamani',
+    nombreResponsable: 'Luis Zavala Gutiérrez',
+    fecha: '',
+    horaInicio: '',
+    horaFinalizacion: '',
+    areaProduccion: 'TACNA 02/02-A-TAC',
+    numeroDER: '',
+    localizacion: 'CALETA - PUNTA PICATA',
+    numeroDniRuc: '',
+    nombreAsociacion: '',
+    numeroRegistro: '',
+    nombreRepresentante: '',
+    dniRepresentante: '',
+    nombreAplicacion: 'TRAZAMOBI',
+    plataformaDigital: 'WhatsApp Web',
+    numeroMatricula: '',
+    nombreEmbarcacion: '',
+    cantidad: '',
+    tipoRecurso: '',
+    destinoFinal: '',
+    descripcionMedioProbatorio: 'Imagen fotográfica',
+    numeroPlaca: '',
+};
+
+
+function InspectionForm({ selectedRecord, onFormSubmit, onFormReset }) {
+    const [formData, setFormData] = useState(initialState);
+    const [loadingDniRepresentante, setLoadingDniRepresentante] = useState(false);
+    const [loadingDniRuc, setLoadingDniRuc] = useState(false);
+    const [isHovering, setIsHovering] = useState(false);
+
+    useEffect(() => {
+        if (selectedRecord) {
+            setFormData(selectedRecord);
+        }
+    }, [selectedRecord]);
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleSubmit = (event) => {
+        event.preventDefault();
+        if (typeof onFormSubmit === 'function') {  // Comprobación adicional
+            onFormSubmit(formData);
+            handleReset();
+        } else {
+            console.error('onFormSubmit is not a function');
+        }
+    };
+
+    const handleReset = () => {
+        setFormData(initialState);  // Usar el estado inicial predefinido
+        onFormReset();
+    };
 
     // Función para manejar la consulta de DNI del Representante
     const handleDniRepresentanteLookup = async () => {
-        if (dniRepresentante.length !== 8) {
+        if (formData.dniRepresentante.length !== 8) {
             alert('El DNI debe tener 8 dígitos.');
             return;
         }
@@ -82,15 +152,18 @@ function InspectionForm() {
                     'Content-Type': 'application/json',
                     'Authorization': 'Bearer 5e4aa7d17be2534a53b0a775a5b8f5eb715ac02de4472b8e9fd40edd4d9a24c1'
                 },
-                body: JSON.stringify({ dni: dniRepresentante })
+                body: JSON.stringify({ dni: formData.dniRepresentante })
             });
 
             const data = await response.json();
             if (data.success) {
-                setNombreRepresentante(`${data.data.nombres} ${data.data.apellido_paterno} ${data.data.apellido_materno}`);
+                setFormData((prev) => ({
+                    ...prev,
+                    nombreRepresentante: `${data.data.nombres} ${data.data.apellido_paterno} ${data.data.apellido_materno}`
+                }));
             } else {
                 alert('No se encontraron datos para el DNI ingresado.');
-                setNombreRepresentante('');
+                setFormData((prev) => ({ ...prev, nombreRepresentante: '' }));
             }
         } catch (error) {
             console.error('Error al consultar la API de DNI:', error);
@@ -99,23 +172,21 @@ function InspectionForm() {
         }
     };
 
+    // Función para manejar la consulta de DNI/RUC
     const handleDniRucLookup = async () => {
-        // Verificar que el número ingresado sea de 8 dígitos para DNI o 11 dígitos para RUC
-        if (numeroDniRuc.length !== 8 && numeroDniRuc.length !== 11) {
+        if (formData.numeroDniRuc.length !== 8 && formData.numeroDniRuc.length !== 11) {
             alert('El número debe tener 8 dígitos para DNI o 11 dígitos para RUC.');
             return;
         }
 
-        // Establecer estado de carga a true
         setLoadingDniRuc(true);
 
-        // Limpiar solo el campo de nombre de la asociación si es un RUC (11 dígitos)
-        if (numeroDniRuc.length === 11) {
-            setNombreAsociacion('');
+        if (formData.numeroDniRuc.length === 11) {
+            setFormData((prev) => ({ ...prev, nombreAsociacion: '' }));
         }
 
-        const url = numeroDniRuc.length === 8 ? 'https://apiperu.dev/api/dni' : 'https://apiperu.dev/api/ruc';
-        const body = numeroDniRuc.length === 8 ? { dni: numeroDniRuc } : { ruc: numeroDniRuc };
+        const url = formData.numeroDniRuc.length === 8 ? 'https://apiperu.dev/api/dni' : 'https://apiperu.dev/api/ruc';
+        const body = formData.numeroDniRuc.length === 8 ? { dni: formData.numeroDniRuc } : { ruc: formData.numeroDniRuc };
 
         try {
             const response = await fetch(url, {
@@ -130,76 +201,25 @@ function InspectionForm() {
 
             const data = await response.json();
             if (data.success) {
-                if (numeroDniRuc.length === 8) {
-                    // Actualizar el nombre del representante si es un DNI
-                    setNombreAsociacion(`${data.data.nombres} ${data.data.apellido_paterno} ${data.data.apellido_materno}`);
+                if (formData.numeroDniRuc.length === 8) {
+                    setFormData((prev) => ({
+                        ...prev,
+                        nombreAsociacion: `${data.data.nombres} ${data.data.apellido_paterno} ${data.data.apellido_materno}`
+                    }));
                 } else {
-                    // Actualizar el nombre de la asociación si es un RUC
-                    setNombreAsociacion(data.data.nombre_o_razon_social);
+                    setFormData((prev) => ({
+                        ...prev,
+                        nombreAsociacion: data.data.nombre_o_razon_social
+                    }));
                 }
             } else {
                 alert('No se encontraron datos para el número ingresado.');
-                if (numeroDniRuc.length === 11) {
-                    setNombreAsociacion('');
-                }
-                if (numeroDniRuc.length === 8) {
-                    setNombreAsociacion('');
-                }
+                setFormData((prev) => ({ ...prev, nombreAsociacion: '' }));
             }
         } catch (error) {
             console.error('Error al consultar la API de RUC/DNI:', error);
         } finally {
             setLoadingDniRuc(false);
-        }
-    };
-
-
-    const handleSubmit = async (event) => {
-        event.preventDefault();
-        if (!num || !numFicha || !numeroDER || !nombreAsociacion || !numeroMatricula || !nombreEmbarcacion || !cantidad || !tipoRecurso || !destinoFinal) {
-            alert('Por favor, complete todos los campos obligatorios.');
-            return;
-        }
-
-        // Objeto con los datos del formulario
-        const formData = {
-            num,
-            numFicha,
-            nombreInspector,
-            nombreResponsable,
-            fecha,
-            horaInicio,
-            horaFinalizacion,
-            areaProduccion,
-            numeroDER,
-            localizacion,
-            numeroDniRuc,
-            nombreAsociacion,
-            numeroRegistro,
-            nombreRepresentante,
-            dniRepresentante,
-            nombreAplicacion,
-            plataformaDigital,
-            numeroMatricula,
-            nombreEmbarcacion,
-            cantidad,
-            tipoRecurso,
-            destinoFinal,
-            descripcionMedioProbatorio,
-            numeroPlaca
-        };
-
-        // Aquí es donde conectamos con Supabase para guardar los datos
-        const { data, error } = await supabase
-            .from('inspections') // Nombre de tu tabla en Supabase
-            .insert([formData]); // Asegúrate de pasar un array con el objeto formData
-
-        if (error) {
-            console.error('Error al guardar los datos en Supabase:', error.message);
-            alert('Hubo un problema al guardar los datos.');
-        } else {
-            alert('Datos guardados exitosamente en Supabase.');
-            console.log('Datos guardados:', data);
         }
     };
 
@@ -210,120 +230,143 @@ function InspectionForm() {
                 <input
                     type="number"
                     min="1"
-                    style={styles.input}
-                    value={num}
-                    onChange={(e) => setNum(e.target.value)}
+                    style={{ ...styles.input, ...(isHovering ? styles.inputFocus : {}) }}
+                    name="num"
+                    value={formData.num}
+                    onChange={handleChange}
                     required
+                    onFocus={() => setIsHovering(true)}
+                    onBlur={() => setIsHovering(false)}
                 />
             </div>
+
             <div style={styles.formGroup}>
                 <label style={styles.label}>Número de Ficha (solo números positivos):</label>
                 <input
                     type="number"
                     min="1"
+                    name="numFicha"
                     style={styles.input}
-                    value={numFicha}
-                    onChange={(e) => setNumFicha(e.target.value)}
+                    value={formData.numFicha}
+                    onChange={handleChange}
                     required
                 />
             </div>
+
             <div style={styles.formGroup}>
                 <label style={styles.label}>Nombre del Inspector:</label>
                 <select
                     style={styles.input}
-                    value={nombreInspector}
-                    onChange={(e) => setNombreInspector(e.target.value)}
+                    name="nombreInspector"
+                    value={formData.nombreInspector}
+                    onChange={handleChange}
                     required
                 >
                     <option value="Edel Candia Mamani">Edel Candia Mamani</option>
                     <option value="Luis Zavala Gutiérrez">Luis Zavala Gutiérrez</option>
                 </select>
             </div>
+
             <div style={styles.formGroup}>
                 <label style={styles.label}>Nombre del Responsable:</label>
                 <select
                     style={styles.input}
-                    value={nombreResponsable}
-                    onChange={(e) => setNombreResponsable(e.target.value)}
+                    name="nombreResponsable"
+                    value={formData.nombreResponsable}
+                    onChange={handleChange}
                     required
                 >
                     <option value="Edel Candia Mamani">Edel Candia Mamani</option>
                     <option value="Luis Zavala Gutiérrez">Luis Zavala Gutiérrez</option>
                 </select>
             </div>
+
             <div style={styles.formGroup}>
                 <label style={styles.label}>Fecha (solo 2021):</label>
                 <input
                     type="date"
                     style={styles.input}
-                    value={fecha}
-                    onChange={(e) => setFecha(e.target.value)}
+                    name="fecha"
+                    value={formData.fecha}
+                    onChange={handleChange}
                     min="2021-01-01"
                     max="2021-12-31"
                     required
                 />
             </div>
+
             <div style={styles.formGroup}>
                 <label style={styles.label}>Hora de Inicio:</label>
                 <input
                     type="time"
                     style={styles.input}
-                    value={horaInicio}
-                    onChange={(e) => setHoraInicio(e.target.value)}
+                    name="horaInicio"
+                    value={formData.horaInicio}
+                    onChange={handleChange}
                 />
             </div>
+
             <div style={styles.formGroup}>
                 <label style={styles.label}>Hora de Finalización:</label>
                 <input
                     type="time"
                     style={styles.input}
-                    value={horaFinalizacion}
-                    onChange={(e) => setHoraFinalizacion(e.target.value)}
+                    name="horaFinalizacion"
+                    value={formData.horaFinalizacion}
+                    onChange={handleChange}
                 />
             </div>
+
             <div style={styles.formGroup}>
                 <label style={styles.label}>Área de Producción:</label>
                 <select
                     style={styles.input}
-                    value={areaProduccion}
-                    onChange={(e) => setAreaProduccion(e.target.value)}
+                    name="areaProduccion"
+                    value={formData.areaProduccion}
+                    onChange={handleChange}
                 >
                     <option value="TACNA 02/02-A-TAC">TACNA 02/02-A-TAC</option>
                     <option value="TACNA 02/02-B-TAC">TACNA 02/02-B-TAC</option>
                     <option value="TACNA 03/03-B-TAC">TACNA 03/03-B-TAC</option>
                 </select>
             </div>
+
             <div style={styles.formGroup}>
                 <label style={styles.label}>Número de DER (obligatorio):</label>
                 <input
                     type="text"
                     style={styles.input}
-                    value={numeroDER}
-                    onChange={(e) => setNumeroDER(e.target.value)}
+                    name="numeroDER"
+                    value={formData.numeroDER}
+                    onChange={handleChange}
                     required
                 />
             </div>
+
             <div style={styles.formGroup}>
                 <label style={styles.label}>Localización:</label>
                 <select
                     style={styles.input}
-                    value={localizacion}
-                    onChange={(e) => setLocalizacion(e.target.value)}
+                    name="localizacion"
+                    value={formData.localizacion}
+                    onChange={handleChange}
                 >
                     <option value="CALETA - PUNTA PICATA">CALETA - PUNTA PICATA</option>
                     <option value="DPA MORRO SAMA">DPA MORRO SAMA</option>
                     <option value="CALETA - VILA VILA">CALETA - VILA VILA</option>
                 </select>
             </div>
+
             <div style={styles.formGroup}>
                 <label style={styles.label}>Número de DNI/RUC (hasta 11 dígitos, solo números positivos):</label>
                 <input
                     type="text"
                     style={styles.input}
-                    value={numeroDniRuc}
+                    name="numeroDniRuc"
+                    value={formData.numeroDniRuc}
                     onChange={(e) => {
-                        setNumeroDniRuc(e.target.value);
-                        setNombreAsociacion(''); // Limpiar solo el campo de nombre de la asociación
+                        handleChange(e);
+                        setFormData((prev) => ({ ...prev, nombreAsociacion: '' }));
                     }}
                     maxLength="11"
                 />
@@ -331,35 +374,41 @@ function InspectionForm() {
                     {loadingDniRuc ? 'Buscando...' : 'Buscar DNI/RUC'}
                 </button>
             </div>
+
             <div style={styles.formGroup}>
                 <label style={styles.label}>Nombre de la Asociación (obligatorio):</label>
                 <input
                     type="text"
                     style={styles.input}
-                    value={nombreAsociacion}
-                    onChange={(e) => setNombreAsociacion(e.target.value)}
+                    name="nombreAsociacion"
+                    value={formData.nombreAsociacion}
+                    onChange={handleChange}
                     required
                 />
             </div>
+
             <div style={styles.formGroup}>
                 <label style={styles.label}>Número de Registro:</label>
                 <input
                     type="text"
                     style={styles.input}
-                    value={numeroRegistro}
-                    onChange={(e) => setNumeroRegistro(e.target.value)}
+                    name="numeroRegistro"
+                    value={formData.numeroRegistro}
+                    onChange={handleChange}
                 />
             </div>
+
             <div style={styles.formGroup}>
                 <label style={styles.label}>DNI del Representante (8 dígitos, solo números positivos):</label>
                 <input
                     type="text"
                     pattern="[0-9]{8}"
                     style={styles.input}
-                    value={dniRepresentante}
+                    name="dniRepresentante"
+                    value={formData.dniRepresentante}
                     onChange={(e) => {
-                        setDniRepresentante(e.target.value);
-                        setNombreRepresentante(''); // Limpiar solo el campo de nombre del representante
+                        handleChange(e);
+                        setFormData((prev) => ({ ...prev, nombreRepresentante: '' }));
                     }}
                     maxLength="8"
                 />
@@ -367,104 +416,216 @@ function InspectionForm() {
                     {loadingDniRepresentante ? 'Buscando...' : 'Buscar DNI'}
                 </button>
             </div>
+
             <div style={styles.formGroup}>
                 <label style={styles.label}>Nombre del Representante:</label>
                 <input
                     type="text"
                     style={styles.input}
-                    value={nombreRepresentante}
-                    onChange={(e) => setNombreRepresentante(e.target.value)}
+                    name="nombreRepresentante"
+                    value={formData.nombreRepresentante}
+                    onChange={handleChange}
                 />
             </div>
+
             <div style={styles.formGroup}>
                 <label style={styles.label}>Nombre de la Aplicación:</label>
                 <input
                     type="text"
                     style={styles.input}
-                    value={nombreAplicacion}
-                    onChange={(e) => setNombreAplicacion(e.target.value)}
+                    name="nombreAplicacion"
+                    value={formData.nombreAplicacion}
+                    onChange={handleChange}
                 />
             </div>
+
             <div style={styles.formGroup}>
                 <label style={styles.label}>Plataforma Digital:</label>
                 <input
                     type="text"
                     style={styles.input}
-                    value={plataformaDigital}
-                    onChange={(e) => setPlataformaDigital(e.target.value)}
+                    name="plataformaDigital"
+                    value={formData.plataformaDigital}
+                    onChange={handleChange}
                 />
             </div>
+
             <div style={styles.formGroup}>
                 <label style={styles.label}>Número de Matrícula (obligatorio):</label>
                 <input
                     type="text"
                     style={styles.input}
-                    value={numeroMatricula}
-                    onChange={(e) => setNumeroMatricula(e.target.value)}
+                    name="numeroMatricula"
+                    value={formData.numeroMatricula}
+                    onChange={handleChange}
                     required
                 />
             </div>
+
             <div style={styles.formGroup}>
                 <label style={styles.label}>Nombre de la Embarcación (obligatorio):</label>
                 <input
                     type="text"
                     style={styles.input}
-                    value={nombreEmbarcacion}
-                    onChange={(e) => setNombreEmbarcacion(e.target.value)}
+                    name="nombreEmbarcacion"
+                    value={formData.nombreEmbarcacion}
+                    onChange={handleChange}
                     required
                 />
             </div>
+
             <div style={styles.formGroup}>
                 <label style={styles.label}>Cantidad (obligatorio):</label>
                 <input
                     type="text"
                     style={styles.input}
-                    value={cantidad}
-                    onChange={(e) => setCantidad(e.target.value)}
+                    name="cantidad"
+                    value={formData.cantidad}
+                    onChange={handleChange}
                     required
                 />
             </div>
+
             <div style={styles.formGroup}>
                 <label style={styles.label}>Tipo de Recurso (obligatorio):</label>
                 <input
                     type="text"
                     style={styles.input}
-                    value={tipoRecurso}
-                    onChange={(e) => setTipoRecurso(e.target.value)}
+                    name="tipoRecurso"
+                    value={formData.tipoRecurso}
+                    onChange={handleChange}
                     required
                 />
             </div>
+
             <div style={styles.formGroup}>
                 <label style={styles.label}>Destino Final (obligatorio):</label>
                 <input
                     type="text"
                     style={styles.input}
-                    value={destinoFinal}
-                    onChange={(e) => setDestinoFinal(e.target.value)}
+                    name="destinoFinal"
+                    value={formData.destinoFinal}
+                    onChange={handleChange}
                     required
                 />
             </div>
+
             <div style={styles.formGroup}>
                 <label style={styles.label}>Descripción del Medio Probatorio:</label>
                 <input
                     type="text"
                     style={styles.input}
-                    value={descripcionMedioProbatorio}
-                    onChange={(e) => setDescripcionMedioProbatorio(e.target.value)}
+                    name="descripcionMedioProbatorio"
+                    value={formData.descripcionMedioProbatorio}
+                    onChange={handleChange}
                 />
             </div>
+
             <div style={styles.formGroup}>
                 <label style={styles.label}>Número de Placa:</label>
                 <input
                     type="text"
                     style={styles.input}
-                    value={numeroPlaca}
-                    onChange={(e) => setNumeroPlaca(e.target.value)}
+                    name="numeroPlaca"
+                    value={formData.numeroPlaca}
+                    onChange={handleChange}
                 />
             </div>
+
             <button style={styles.button} type="submit">Enviar</button>
         </form>
     );
+
 }
 
-export default InspectionForm;
+const InspectionTable = ({ records, onEdit, onDelete }) => {
+    return (
+        <table style={styles.table}>
+            <thead>
+                <tr>
+                    <th style={styles.th}>Número</th>
+                    <th style={styles.th}>Número de Ficha</th>
+                    <th style={styles.th}>Nombre del Inspector</th>
+                    <th style={styles.th}>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {records.map((record, index) => (
+                    <tr key={record.id} style={index % 2 === 0 ? styles.trHover : {}}>
+                        <td style={styles.td}>{record.num}</td>
+                        <td style={styles.td}>{record.numFicha}</td>
+                        <td style={styles.td}>{record.nombreInspector}</td>
+                        <td style={styles.td}>
+                            <button
+                                onClick={() => onEdit(record)}
+                                style={styles.editButton}
+                            >
+                                Editar
+                            </button>
+                            <button
+                                onClick={() => onDelete(record.id)}
+                                style={styles.deleteButton}
+                            >
+                                Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                ))}
+            </tbody>
+        </table>
+    );
+};
+
+
+const InspectionApp = () => {
+    const [records, setRecords] = useState([]);
+    const [selectedRecord, setSelectedRecord] = useState(null);
+
+    useEffect(() => {
+        fetchRecords();
+    }, []);
+
+    const fetchRecords = async () => {
+        const { data, error } = await supabase.from('inspections').select('*');
+        if (error) console.error('Error fetching records:', error);
+        else setRecords(data);
+    };
+
+    const handleFormSubmit = async (formData) => {
+        if (formData.id) {
+            const { data, error } = await supabase.from('inspections').update(formData).eq('id', formData.id);
+            if (error) console.error('Error updating record:', error);
+        } else {
+            const { data, error } = await supabase.from('inspections').insert([formData]);
+            if (error) console.error('Error inserting record:', error);
+        }
+        fetchRecords();
+    };
+
+    const handleEdit = (record) => {
+        setSelectedRecord(record);
+    };
+
+    const handleDelete = async (id) => {
+        const { error } = await supabase.from('inspections').delete().eq('id', id);
+        if (error) console.error('Error deleting record:', error);
+        fetchRecords();
+    };
+
+    const handleFormReset = () => {
+        setSelectedRecord(null);
+    };
+
+    return (
+        <div>
+            <InspectionForm
+                selectedRecord={selectedRecord}
+                onFormSubmit={handleFormSubmit}
+                onFormReset={handleFormReset}
+            />
+            <InspectionTable records={records} onEdit={handleEdit} onDelete={handleDelete} />
+        </div>
+    );
+};
+
+export default InspectionApp;
